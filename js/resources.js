@@ -4,6 +4,7 @@ game.resources = [
 	 */
  	// our level tileset
 	{name: "level1_sprites", type:"image", src: "data/map/level1_sprites.png"},
+	{name: "level2_sprites", type:"image", src: "data/map/level2_sprites.png"},
 
 	// the main player spritesheet
 	{name: "player",     type:"image",	src: "data/img/sprite/player.png"},
@@ -18,12 +19,15 @@ game.resources = [
 	// the parallax background
 	{name: "area01_bkg0",         type:"image",	src: "data/img/area01_bkg0.png"},
 	{name: "area01_bkg1",         type:"image",	src: "data/img/area01_bkg1.png"},
+	// the player body part
+	{name: "oneBodyPart", type:"image", src: "data/img/sprite/part.png"},
+	//{name: "mapBlock", type:"image", src: "data/img/map/block.png"},
 
 	/*
 	 * Maps.
  	 */
 	{name: "level1", type: "tmx",	src: "data/map/level1.tmx"},
-	{name: "area02", type: "tmx",	src: "data/map/area02.tmx"},
+	{name: "level2", type: "tmx",	src: "data/map/level2.tmx"},
 
 	/*
 	 * Background music.
