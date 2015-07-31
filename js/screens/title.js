@@ -15,13 +15,13 @@ game.TitleScreen = me.ScreenObject.extend({
             init : function() {
                 this._super(me.Renderable, 'init', [0, 0, me.game.viewport.width, me.game.viewport.height]);
                 // font for the scrolling text
-                this.font = new me.Font("universe", 70, "white", "left"); //new me.BitmapFont("32x32_font", 32);
+                this.font = new me.Font("universe", 50, "white", "middle"); //new me.BitmapFont("32x32_font", 32);
 
                  // a tween to animate the arrow
-                this.scrollertween = new me.Tween(this).to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
+                this.scrollertween = new me.Tween(this).to({scrollerpos: -2100 }, 10000).onComplete(this.scrollover.bind(this)).start();
 
-                this.scroller = "A CREATION WITH MELONJS   ";
-                this.scrollerpos = 600;
+                this.scroller = "Peter Zhu and Max Manning";
+                this.scrollerpos = 500;
 
             },
 
@@ -37,7 +37,7 @@ game.TitleScreen = me.ScreenObject.extend({
             },
 
             draw : function (renderer) {
-                this.font.draw(renderer, "PRESS ENTER TO PLAY", 20, 300);
+                this.font.draw(renderer, "      PRESS ENTER TO PLAY", 20, 300);
                 this.font.draw(renderer, this.scroller, this.scrollerpos, 440);
             },
             onDestroyEvent : function() {
@@ -48,7 +48,6 @@ game.TitleScreen = me.ScreenObject.extend({
 
         // change to play state on press Enter or click/tap
         me.input.bindKey(me.input.KEY.ENTER, "enter", true);
-        me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.ENTER);
         this.handler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
             if (action === "enter") {
                 // play something on tap / enter

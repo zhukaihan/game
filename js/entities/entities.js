@@ -4,6 +4,8 @@
 var bodyPartsNum = 4;
 var liftActive = false;
 var liftIsGoingUp = true;
+var mousePos = {x: 0, y: 0};
+var liftObjects = [];
 
 game.PlayerEntity = me.Entity.extend({
     /**
@@ -61,7 +63,7 @@ game.PlayerEntity = me.Entity.extend({
             if (bodyPartsNum > 1) {
                 bodyPartsNum--;
                 this.renderable.setCurrentAnimation(bodyPartsNum.toString());
-                var thisBodyPart = new game.bodyPart(this.pos.x + 32, this.pos.y, {
+                var thisBodyPart = new game.bodyPart(this.pos.x, this.pos.y, {
                     name: "bodyPart",
                     height: 7,
                     width: 20,
@@ -85,6 +87,8 @@ game.PlayerEntity = me.Entity.extend({
         // handle collisions against other shapes
         me.collision.check(this);
 
+        player = this;
+
         // return true if we moved or if the renderable was updated
         return true;//(this._super(me.Entity, 'update', [dt]) || this.body.vel.x !== 0 || this.body.vel.y !== 0);
     },
@@ -93,7 +97,7 @@ game.PlayerEntity = me.Entity.extend({
      * colision handler
      */
     onCollision : function (response, other) {
-        if (response.b.name == "bodyPart") {
+        if ((response.b.name == "bodyPart") && (response.b.active == false) && (bodyPartsNum < 4)) {
             bodyPartsNum++;
             this.renderable.setCurrentAnimation(bodyPartsNum.toString());
             this.body.getShape(0).setShape(0, 0, [new me.Vector2d(0, 0),
@@ -120,25 +124,9 @@ game.PlayerEntity = me.Entity.extend({
                 return false;
             }
         }
-        /*me.collision.types.ENEMY_OBJECT:
-            if ((response.overlapV.y>0) && !this.body.jumping) {
-                // bounce (force jump)
-                this.body.falling = false;
-                this.body.vel.y = -this.body.maxVel.y * me.timer.tick;
-                // set the jumping flag
-                this.body.jumping = true;
-                // play some audio
-                me.audio.play("stomp");
-                console.log("enemyed");
-            } else {
-                // let's flicker in case we touched an enemy
-                //this.renderable.flicker(750);
-            }
-            return false;
+        if ((response.b.name == "enemyEntity") || (response.b.name == "enemyEntity")) {
+            me.levelDirector.reloadLevel();
         }
-
-        // Make the object solid
-        return true;*/
     }
 });
 
@@ -147,32 +135,83 @@ game.bodyPart = me.Entity.extend({
         settings.image = "oneBodyPart";
         var width = settings.width;
         var height = settings.height;
-
+        this.bodyPartPos = {x: x, y: y};
         // call the parent constructor
+
         this._super(me.Entity, 'init', [x, y , settings]);
+        this.alwaysUpdate = true;
         // walking & jumping speed
-        this.body.setVelocity(5, 0);
+
+        this.body.setMaxVelocity(10, 10);
+        if ((mousePos.x !== 0) && (mousePos.y !== 0)) {
+            var hypLen = Math.sqrt(Math.pow((mousePos.x - x), 2) + Math.pow((mousePos.y - y), 2));
+            this.body.setVelocity(((mousePos.x - x) / hypLen),((mousePos.y - y) / hypLen));
+            this.velocityX = ((mousePos.x - x) / hypLen);
+            this.velocityY = ((mousePos.y - y) / hypLen);
+            //this.body.setVelocity(((mousePos.x - x)),((mousePos.y - y)));
+            //this.velocityX = ((mousePos.x - x));
+            //this.velocityY = ((mousePos.y - y));
+        } else {
+            this.body.setVelocity(4, 0);
+            this.velocityX = 4;
+            this.velocityY = 0;
+        }
+        //console.log(((mousePos.x - x) / hypLen),((mousePos.y - y) / hypLen),x,y);
         this.active = true;
+        this.hitGround == false;
+        this.bodyPartUsed = false;
     },
     update: function(dt) {
         if (this.active) {
-            console.log("update");
-            this.body.vel.x += this.body.maxVel.x * me.timer.tick;
+            //console.log(this.velocityX, this.velocityY);
+/*
+            if (this.velocityX >= 0) {
+                this.body.vel.x += this.velocityX * me.timer.tick;
+            } else {
+                this.body.vel.x -= -this.velocityX * me.timer.tick;
+            }
+            if (this.velocityY < 0) {
+                this.body.vel.y += this.velocityY * me.timer.tick;
+            } else {
+                this.body.vel.y -= -this.velocityY * me.timer.tick;
+            }*/
+            //this.body.setVelocity(this.velocityX, this.velocityY);
+            this.body.vel.x += (this.velocityX < 0)? -this.body.accel.x * me.timer.tick : this.body.accel.x * me.timer.tick;
+            this.body.vel.y -= (this.velocityY > 0)? -this.body.accel.y * me.timer.tick : this.body.accel.y * me.timer.tick;
+            /*if (this.velocityX < 0) {
+                this.body.vel.y += (this.velocityY > 0)? -this.body.accel.y * me.timer.tick : this.body.accel.y * me.timer.tick;
+            } else {
+                this.body.vel.y -= (this.velocityY > 0)? -this.body.accel.y * me.timer.tick : this.body.accel.y * me.timer.tick;
+            }*/
+            //console.log(this.body.accel, this.velocityX, this.velocityY);
+            this.body.update(dt);
+            me.collision.check(this);
+        } else if (!this.hitGround) {
+            if (this.velocityY < 0) {
+                this.body.vel.y += 1000 * me.timer.tick;
+            } else {
+                this.body.vel.y += 1000 * me.timer.tick;
+            }
             this.body.update(dt);
             me.collision.check(this);
         }
     },
     onCollision: function(response, other) {
-        console.log("onCollisioned");
-        if (response.b.body.collisionType && me.collision.types.ALL_OBJECT) {
+        if ((response.b.body.collisionType && me.collision.types.ALL_OBJECT) && ((response.a.name !== "mainPlayer") && (response.b.name !== "mainPlayer"))) {
             this.active = false;
+            //console.log(response);
+            this.body.setVelocity(0, 3);
+            if (response.overlapV.y > 0) {
+                this.hitGround == true;
+            }
         }
     }
 });
 
 /**
  * Coin Entity
- *//*
+ */
+ /*
 game.CoinEntity = me.CollectableEntity.extend({
 
     init: function (x, y, settings) {
@@ -200,27 +239,30 @@ game.CoinEntity = me.CollectableEntity.extend({
 /**
  * Enemy Entity
  */
-/*game.EnemyEntity = me.Entity.extend({
+game.EnemyEntity = me.Entity.extend({
     init: function (x, y, settings) {
         // define this here instead of tiled
-        settings.image = "wheelie_right";
-
+        settings.image = "enemy";
+        this.health = 2;
         // save the area size defined in Tiled
         var width = settings.width;
         var height = settings.height;
-
         // adjust the size setting information to match the sprite size
         // so that the entity object is created with the right size
-        settings.framewidth = settings.width = 64;
-        settings.frameheight = settings.height = 64;
+        settings.framewidth = settings.width = 32;
+        settings.frameheight = settings.height = 32;
 
         // redefine the default shape (used to define path) with a shape matching the renderable
         settings.shapes[0] = new me.Rect(0, 0, settings.framewidth, settings.frameheight);
-
         // call the parent constructor
         this._super(me.Entity, 'init', [x, y , settings]);
-
+        // define lost bodyParts animation (using the first frame)
+        this.renderable.addAnimation("1",  [1]);
+        this.renderable.addAnimation("2",  [0]);
+        // set the large animation as default
+        this.renderable.setCurrentAnimation("2");
         // set start/end position based on the initial area size
+
         x = this.pos.x;
         this.startX = x;
         this.endX   = x + width - settings.framewidth;
@@ -234,9 +276,8 @@ game.CoinEntity = me.CollectableEntity.extend({
     },
 
     // manage the enemy movement
-    update : function (dt)
-    {
-        if (this.alive) {
+    update : function (dt) {
+        if ((this.alive) && (this.health > 0)) {
             if (this.walkLeft && this.pos.x <= this.startX) {
                 this.walkLeft = false;
             } else if (!this.walkLeft && this.pos.x >= this.endX) {
@@ -245,18 +286,14 @@ game.CoinEntity = me.CollectableEntity.extend({
 
             this.renderable.flipX(this.walkLeft);
             this.body.vel.x += (this.walkLeft) ? -this.body.accel.x * me.timer.tick : this.body.accel.x * me.timer.tick;
+            this.body.update(dt);
+            me.collision.check(this);
 
-        } else {
-            this.body.vel.x = 0;
         }
-        // check & update movement
-        this.body.update(dt);
-
         // handle collisions against other shapes
-        me.collision.check(this);
 
         // return true if we moved or if the renderable was updated
-        return (this._super(me.Entity, 'update', [dt]) || this.body.vel.x !== 0 || this.body.vel.y !== 0);
+        return false;//(this._super(me.Entity, 'update', [dt]) || this.body.vel.x !== 0 || this.body.vel.y !== 0);
     },
 
     //*
@@ -265,53 +302,133 @@ game.CoinEntity = me.CollectableEntity.extend({
 
     onCollision : function (response, other) {
         if (response.b.body.collisionType !== me.collision.types.WORLD_SHAPE) {
+            if (((response.a.name === "bodyPart") || (response.b.name === "bodyPart"))
+            && ((response.a.bodyPartUsed == false) || (response.b.bodyPartUsed == false))) {
+                if (response.a.name === "bodyPart") {
+                    response.a.bodyPartUsed = true;
+                } else {
+                    response.b.bodyPartUsed = true;
+                }
+                this.health--;
+                if (this.health <= 0){
+                    this.alive = false;
+                    me.game.world.removeChild(this);
+                }else{
+                    this.renderable.setCurrentAnimation(this.health.toString());
+                    this.body.vel.x -= 1000;
+                }
+            }
+
+        }
             // res.y >0 means touched by something on the bottom
             // which mean at top position for this one
-            if (this.alive && (response.overlapV.y > 0) && response.a.body.falling) {
-                this.renderable.flicker(750);
-            }
-            return false;
-        }
-        // Make all other objects solid
-        return true;
+        /*if (this.alive && (response.overlapV.y > 0) && response.a.body.falling) {
+            this.renderable.flicker(750);
+        }*/
+        //return false;
     }
+        // Make all other objects solid
+        //return true;
+    //}
 });
-*/
+
 
 game.liftEntity = me.Entity.extend({
-    update: function(dt) {
+    init: function(x, y, settings) {
+        this._super(me.Entity, 'init', [x, y, settings]);
+        if (settings.matchNum !== -1) {
+            this.upHeight = settings.upHeight;
+            this.matchNum = settings.matchNum;
+            this.direction = settings.direction;
+            var anotherone = this;
+            liftObjects.push(anotherone);
+            //console.log(anotherone);
+        }
+        this.liftActive == false;
         this.gravity = 0;
         this.body.setVelocity(0,4);
-        if (liftActive) {
-            if (liftIsGoingUp) {
+        this.alwaysUpdate = true;
+    },
+    update: function(dt) {
+        if (this.liftActive) {
+            if (this.direction == "up") {
                 this.body.vel.y -= 1000 * me.timer.tick;
-                this.body.update(dt);
+                if (this.pos.y <= this.upHeight) {
+                    this.liftActive = false;
+                }
             } else {
                 this.body.vel.y += 1000 * me.timer.tick;
-                this.body.update(dt);
+                if (this.pos.y >= this.upHeight) {
+                    this.liftActive = false;
+                }
             }
-            //console.log(this.body);
-            /*if (this.body.getShape(0).pos.y <= 288) {
-                liftActive = false;
-            }*/
+
+            this.body.update(dt);
         }
     }
 });
 
 game.liftButtonEntity = me.Entity.extend({
+    init: function(x,y,settings) {
+        this._super(me.Entity, 'init', [x, y, settings]);
+        if (settings.matchNum !== null) {
+            this.matchNum = settings.matchNum;
+        }
+    },
 
     onCollision: function (response, other) {
-        if ((response.b.body.collisionType !== me.collision.types.WORLD_SHAPE) && ((response.a.name == "mainPlayer") || (response.a.name == "liftButtonEntity"))) {
+        if ((response.b.body.collisionType !== me.collision.types.WORLD_SHAPE)
+        && ((response.a.name == "mainPlayer") || (response.a.name == "liftButtonEntity") || (response.b.name == "liftButtonEntity"))) {
             liftActive = true;
+            for (var i = 0; i < liftObjects.length; i++) {
+                //console.log(liftObjects[i]);
+                if (liftObjects[i].matchNum == this.matchNum) {
+                    liftObjects[i].liftActive = true;
+                    break;
+                }
+                //console.log("liftoncolli");
+            }/*
+            liftObjects.forEach(function(x) {
+                if (x.matchNum == this.matchNum) {
+                    x.liftActive = true;
+                }
+                console.log("liftoncolli");
+            });*/
             //liftIsGoingUp = !liftIsGoingUp;
         }
     }
 
 });
 
+game.regenEntity = me.Entity.extend({
+    onCollision: function (response, other) {
+        if (response.a.name == "mainPlayer") {
+            bodyPartsNum = 4;
+            response.a.renderable.setCurrentAnimation(bodyPartsNum.toString());
+            response.a.body.getShape(0).setShape(0, 0, [new me.Vector2d(0, 0),
+                                                  new me.Vector2d(20, 0),
+                                                  new me.Vector2d(20, 11 + ((bodyPartsNum - 1) * 7)),
+                                                  new me.Vector2d(0, 11 + ((bodyPartsNum - 1) * 7))
+                                              ]);
+            me.game.world.removeChild(this);
+        }
+        if (response.b.name =="mainPlayer") {
+            bodyPartsNum = 4;
+            response.b.renderable.setCurrentAnimation(bodyPartsNum.toString());
+            response.b.body.getShape(0).setShape(0, 0, [new me.Vector2d(0, 0),
+                                                  new me.Vector2d(20, 0),
+                                                  new me.Vector2d(20, 11 + ((bodyPartsNum - 1) * 7)),
+                                                  new me.Vector2d(0, 11 + ((bodyPartsNum - 1) * 7))
+                                              ]);
+            me.game.world.removeChild(this);
+        }
+    }
+});
+
 game.doorEntity = me.Entity.extend({
     onCollision: function (response, other) {
         if ((response.b.body.collisionType !== me.collision.types.WORLD_SHAPE) && (response.a.name == "mainPlayer") && (bodyPartsNum == 4)) {
+            liftObjects = [];
             gameLevel++;
             me.game.world.removeChild(gamerPlayer);
             me.levelDirector.loadLevel("level" + gameLevel.toString());
@@ -321,3 +438,9 @@ game.doorEntity = me.Entity.extend({
         return true;
     }
 });
+
+function mouseEventHandler(input) {
+    mousePos = {x: input.gameWorldX, y: input.gameWorldY};
+    //mousePos = me.input.globalToLocal(input.gameWorldX, input.gameWorldY);
+    console.log(input.gameWorldY);
+}

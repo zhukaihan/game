@@ -1,5 +1,6 @@
 var gameLevel = 1;
 var gamerPlayer;
+
 /* Game namespace */
 var game = {
 
@@ -43,12 +44,11 @@ var game = {
         me.state.set(me.state.PLAY, new game.PlayScreen());
 
 		// add our player entity in the entity pool
-		//me.pool.register("mainPlayer", game.PlayerEntity);
 		me.pool.register("doorEntity", game.doorEntity);
 		me.pool.register("liftEntity", game.liftEntity);
 		me.pool.register("liftButtonEntity", game.liftButtonEntity);
-		//me.pool.register("CoinEntity", game.CoinEntity);
-		//me.pool.register("EnemyEntity", game.EnemyEntity);
+		me.pool.register("enemyEntity", game.EnemyEntity);
+		me.pool.register("regenEntity", game.regenEntity);
 
 		//gamerEntity = [game.PlayerEntity, game.PlayerEntity, game.PlayerEntity, game.PlayerEntity]
 		//gamerNum = 0;
@@ -57,6 +57,9 @@ var game = {
 		me.input.bindKey(me.input.KEY.RIGHT, "right");
 		me.input.bindKey(me.input.KEY.UP,	"jump", true);
 		me.input.bindKey(me.input.KEY.SPACE, "spit", true);
+		me.input.registerPointerEvent("pointermove", me.game.world, mouseEventHandler);
+        me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.SPACE);
+		//me.input.bindKey(me.input.KEY.R, "restartIt");
 
         // Start the game.
         me.state.change(me.state.MENU);
