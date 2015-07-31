@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="35" height="20" tilewidth="32" tileheight="32" backgroundcolor="#518086" nextobjectid="54">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="35" height="20" tilewidth="32" tileheight="32" backgroundcolor="#518086" nextobjectid="55">
  <tileset firstgid="1" name="map6" tilewidth="32" tileheight="32">
   <image source="level6_sprites.png" width="1121" height="639"/>
  </tileset>
@@ -43,16 +43,24 @@
    <properties>
     <property name="direction" value="up"/>
     <property name="image" value="gate"/>
-    <property name="matchNum" value="3"/>
+    <property name="matchNum" value="-2"/>
+    <property name="motionTrigger" value="enemy"/>
     <property name="upHeight" value="33"/>
    </properties>
   </object>
  </objectgroup>
  <objectgroup name="trap">
-  <object id="11" x="801" y="161" width="125" height="29"/>
+  <object id="11" name="liftEntity" x="801" y="161" width="125" height="29">
+   <properties>
+    <property name="direction" value="disappear"/>
+    <property name="image" value="lift"/>
+    <property name="matchNum" value="3"/>
+    <property name="upHeight" value="0"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup name="enemy">
-  <object id="15" x="777" y="350" width="147" height="32">
+  <object id="15" name="enemyEntity" x="789" y="94" width="147" height="32">
    <properties>
     <property name="framewidth" value="32"/>
     <property name="image" value="enemy"/>
@@ -60,7 +68,7 @@
   </object>
  </objectgroup>
  <objectgroup name="enemy2">
-  <object id="14" name="enemyEntity" x="776" y="349" width="148" height="32">
+  <object id="14" name="enemyEntity" x="789" y="124" width="148" height="32">
    <properties>
     <property name="framewidth" value="32"/>
     <property name="image" value="enemy"/>
@@ -112,7 +120,7 @@
   <object id="34" x="320" y="189" width="126" height="36"/>
   <object id="35" x="320" y="158" width="127" height="14"/>
   <object id="37" x="752" y="58" width="47" height="166"/>
-  <object id="38" x="928" y="24" width="32" height="296"/>
+  <object id="38" x="928" y="24" width="62" height="296"/>
   <object id="39" x="800" y="-1" width="144" height="33"/>
   <object id="40" x="64" y="128" width="30" height="31"/>
   <object id="41" x="128" y="161" width="32" height="30"/>

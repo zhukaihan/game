@@ -6,6 +6,7 @@ var liftActive = false;
 var liftIsGoingUp = true;
 var mousePos = {x: 0, y: 0};
 var liftObjects = [];
+var enemyObjects = [];
 
 game.PlayerEntity = me.Entity.extend({
     /**
@@ -125,8 +126,13 @@ game.PlayerEntity = me.Entity.extend({
             }
         }
         if ((response.b.name == "enemyEntity") || (response.b.name == "enemyEntity")) {
+            liftObjects = [];
+            me.game.world.removeChild(gamerPlayer);
             me.levelDirector.reloadLevel();
+            gamerPlayer = new game.PlayerEntity(150, 274, {name: "mainPlayer", width: 20, height: 32, image: "player", framewidth: 32})
+            me.game.world.addChild(gamerPlayer);
         }
+
     }
 });
 
@@ -271,6 +277,14 @@ game.EnemyEntity = me.Entity.extend({
         // to remember which side we were walking
         this.walkLeft = false;
 
+        this.alwaysUpdate = true;
+
+        this.defeated = false;
+
+        var anEnemy = this;
+        enemyObjects.push(anEnemy);
+
+        this.gravity = 0.98;
         // walking & jumping speed
         this.body.setVelocity(4, 6);
     },
@@ -313,9 +327,9 @@ game.EnemyEntity = me.Entity.extend({
                 if (this.health <= 0){
                     this.alive = false;
                     me.game.world.removeChild(this);
+                    this.defeated = true;
                 }else{
                     this.renderable.setCurrentAnimation(this.health.toString());
-                    this.body.vel.x -= 1000;
                 }
             }
 
@@ -340,6 +354,7 @@ game.liftEntity = me.Entity.extend({
             this.upHeight = settings.upHeight;
             this.matchNum = settings.matchNum;
             this.direction = settings.direction;
+            this.motionTrigger = settings.motionTrigger;
             var anotherone = this;
             liftObjects.push(anotherone);
             //console.log(anotherone);
@@ -351,19 +366,35 @@ game.liftEntity = me.Entity.extend({
     },
     update: function(dt) {
         if (this.liftActive) {
-            if (this.direction == "up") {
-                this.body.vel.y -= 1000 * me.timer.tick;
-                if (this.pos.y <= this.upHeight) {
-                    this.liftActive = false;
-                }
+           	if (this.direction == "disappear") {
+        		me.game.world.removeChild(this);
+   	    		this.liftActive = false;
+       		} else if (this.direction == "up") {
+         	    this.body.vel.y -= 1000 * me.timer.tick;
+               	if (this.pos.y <= this.upHeight) {
+                   	this.liftActive = false;
+               	}
             } else {
-                this.body.vel.y += 1000 * me.timer.tick;
-                if (this.pos.y >= this.upHeight) {
-                    this.liftActive = false;
-                }
-            }
-
+   	            this.body.vel.y += 1000 * me.timer.tick;
+    	        if (this.pos.y >= this.upHeight) {
+        	        this.liftActive = false;
+            	}
+	        }
             this.body.update(dt);
+        }
+        if (this.motionTrigger == "enemy") {
+            var allEnemyDefeated = true;
+           	for (var i = 0; i < enemyObjects.length; i++) {
+        	   	//console.log(enemyObjects[i].defeated);
+           		if (!enemyObjects[i].defeated) {
+           			allEnemyDefeated = false;
+           			break;
+           		}
+           	}
+           	if (allEnemyDefeated) {
+           		this.motionTrigger = "";
+           		this.liftActive = true;
+           	}
         }
     }
 });
@@ -379,14 +410,11 @@ game.liftButtonEntity = me.Entity.extend({
     onCollision: function (response, other) {
         if ((response.b.body.collisionType !== me.collision.types.WORLD_SHAPE)
         && ((response.a.name == "mainPlayer") || (response.a.name == "liftButtonEntity") || (response.b.name == "liftButtonEntity"))) {
-            liftActive = true;
             for (var i = 0; i < liftObjects.length; i++) {
-                //console.log(liftObjects[i]);
                 if (liftObjects[i].matchNum == this.matchNum) {
                     liftObjects[i].liftActive = true;
-                    break;
+                    //me.game.world.removeChild(this);
                 }
-                //console.log("liftoncolli");
             }/*
             liftObjects.forEach(function(x) {
                 if (x.matchNum == this.matchNum) {
@@ -442,5 +470,5 @@ game.doorEntity = me.Entity.extend({
 function mouseEventHandler(input) {
     mousePos = {x: input.gameWorldX, y: input.gameWorldY};
     //mousePos = me.input.globalToLocal(input.gameWorldX, input.gameWorldY);
-    console.log(input.gameWorldY);
+    //console.log(input.gameWorldY);
 }

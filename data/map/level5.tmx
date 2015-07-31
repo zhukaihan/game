@@ -28,7 +28,7 @@
   </object>
  </objectgroup>
  <objectgroup name="enemy">
-  <object id="4" name="enemyEntity" x="687" y="543" width="266" height="32">
+  <object id="4" name="enemyEntity" x="765" y="542" width="320" height="32">
    <properties>
     <property name="framewidth" value="32"/>
     <property name="image" value="enemy"/>
