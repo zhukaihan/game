@@ -63,7 +63,7 @@ game.TitleScreen = me.ScreenObject.extend({
      */
     onDestroyEvent : function() {
         me.input.unbindKey(me.input.KEY.ENTER);
-        me.input.unbindPointer(me.input.mouse.LEFT);
+        //me.input.unbindPointer(me.input.mouse.LEFT);
         me.event.unsubscribe(this.handler);
    }
 });

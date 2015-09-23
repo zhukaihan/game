@@ -58,7 +58,7 @@ var game = {
 		me.input.bindKey(me.input.KEY.UP,	"jump", true);
 		me.input.bindKey(me.input.KEY.SPACE, "spit", true);
 		me.input.registerPointerEvent("pointermove", me.game.world, mouseEventHandler);
-        me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.SPACE);
+  	me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.SPACE);
 		//me.input.bindKey(me.input.KEY.R, "restartIt");
 
         // Start the game.
